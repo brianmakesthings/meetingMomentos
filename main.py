@@ -5,7 +5,7 @@ from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from secrets import secrets
-import datetime
+import datetime as dt
 import requests
 
 # If modifying these scopes, delete the file token.pickle.
@@ -36,12 +36,27 @@ def authenticate():
 
     return (docService,driveService)
 
+def validateDate():
+    f = open("dates.txt", "r")
+    f.seek(0)
+    targetDatesArr = f.read().split("\n")
+    targetDatesArr = map(lambda date: dt.datetime.strptime(date, "%Y-%m-%d") - dt.timedelta(days=1), targetDatesArr)
+
+    if (dt.date.today() not in targetDatesArr):
+        print("Script should not run today as defined in dates.txt")
+        return False
+
+    return True
+
 def main():
     # Slack
     slackUrl = secrets['slackUrl']
 
-    if (datetime.date.isoweekday != 5):
-        print("It's not Friday!")
+    # if (dt.date.isoweekday != 5):
+    #     print("It's not Friday!")
+    #     return
+
+    if (not validateDate()):
         return
 
     service = authenticate()
@@ -49,7 +64,7 @@ def main():
     driveService = service[1]
     folderId = secrets['destFolderId']
 
-    targetDate = datetime.date.today + datetime.timedelta(days=1)
+    targetDate = dt.date.today + dt.timedelta(days=1)
 
     print(targetDate)
     body = {
